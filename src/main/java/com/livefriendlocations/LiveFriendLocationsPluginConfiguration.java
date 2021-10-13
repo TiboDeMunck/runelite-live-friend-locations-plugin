@@ -14,7 +14,7 @@ public interface LiveFriendLocationsPluginConfiguration extends Config
 	)
 	default String getEndpoint()
 	{
-		return "https://safe-fjord-14581.herokuapp.com";
+		return "base url for api here";
 	}
 
 	@ConfigItem(
@@ -24,7 +24,7 @@ public interface LiveFriendLocationsPluginConfiguration extends Config
 	)
 	default String sharedKey()
 	{
-		return "vx9R7pizh918o0tI5uTc0tV5MzxrJTDh";
+		return "shared key here";
 	}
 
 	@ConfigItem(
