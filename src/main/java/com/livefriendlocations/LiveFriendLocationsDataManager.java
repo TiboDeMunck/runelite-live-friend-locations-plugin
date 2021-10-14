@@ -71,9 +71,18 @@ public class LiveFriendLocationsDataManager {
                 {
                     if (response.isSuccessful())
                     {
-                        log.info("Successfully sent location data");
-                        plugin.setPostError(false);
-                        response.close();
+                        try {
+                            JsonArray j = new Gson().fromJson(response.body().string(), JsonArray.class);
+                            plugin.setGIMData(parseData(j));
+                            log.info(j.toString());
+                            plugin.setPostError(false);
+                            response.close();
+                        }
+                        catch (IOException | JsonSyntaxException e)
+                        {
+                            plugin.setGetError(true);
+                            log.warning(e.getMessage());
+                        }
                     }
                     else
                     {

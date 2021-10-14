@@ -22,6 +22,7 @@ import net.runelite.client.util.ImageUtil;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.regex.*;
 
 @PluginDescriptor(
 		name = "Live Friend Locations",
@@ -120,11 +121,10 @@ public class LiveFriendLocationsPlugin extends Plugin
 		return configManager.getConfig(LiveFriendLocationsPluginConfiguration.class);
 	}
 
-	@Override
+	/*@Override
 	protected void startUp()
 	{
-		playerName = client.getLocalPlayer().getName();
-	}
+	}*/
 
 	@Override
 	protected void shutDown()
@@ -137,16 +137,22 @@ public class LiveFriendLocationsPlugin extends Plugin
 
 	@Subscribe
 	public void onGameTick(GameTick tick) {
-		if (config.sendLocation()) {
-			playerPos = client.getLocalPlayer().getWorldLocation();
-			playerType = client.getAccountType().name();
-			LiveFriendLocationsData d = new LiveFriendLocationsData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType);
-			dataManager.makePostRequest(d);
-			//log.info(String.format("x: %s, y: %s, plane: %s", playerPos.getX(), playerPos.getY(), playerPos.getPlane()));
+		if (isValidURL(config.getEndpoint()))
+		{
+			if (config.sendLocation()) {
+				playerPos = client.getLocalPlayer().getWorldLocation();
+				playerType = client.getAccountType().name();
+				playerName = client.getLocalPlayer().getName();
+				LiveFriendLocationsData d = new LiveFriendLocationsData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType);
+				dataManager.makePostRequest(d);
+				//log.info(String.format("x: %s, y: %s, plane: %s", playerPos.getX(), playerPos.getY(), playerPos.getPlane()));
+			}
+			else {
+				dataManager.makeGetRequest();
+			}
+			removeWaypoints();
+			setWaypoints();
 		}
-		dataManager.makeGetRequest();
-		removeWaypoints();
-		setWaypoints();
 	}
 
 	public String getLiveFriendLocationsGetEndpoint()
@@ -156,6 +162,11 @@ public class LiveFriendLocationsPlugin extends Plugin
 
 	public String getLiveFriendLocationsPostEndpoint()
 	{
+		String url = config.getEndpoint();
+		if (url.substring(url.length() - 1).equals("/"))
+		{
+			return url + "post";
+		}
 		return config.getEndpoint() + "/post";
 	}
 
@@ -210,5 +221,25 @@ public class LiveFriendLocationsPlugin extends Plugin
 			default:
 				return NORMAL_ICON;
 		}
+	}
+
+	public boolean isValidURL(String url)
+	{
+		String regex = "((http|https)://)(www.)?"
+				+ "[a-zA-Z0-9@:%._\\-\\+~#?&//=]"
+				+ "{2,256}\\.[a-z]"
+				+ "{2,6}\\b([-a-zA-Z0-9@:%"
+				+ "._\\+~#?&//=]*)";
+
+		Pattern p = Pattern.compile(regex);
+
+		if (url == null) {
+			return false;
+		}
+
+		Matcher m = p.matcher(url);
+
+		//log.info(url + " matches regex: " + String.valueOf(m.matches()));
+		return m.matches();
 	}
 }
