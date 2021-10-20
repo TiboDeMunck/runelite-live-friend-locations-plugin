@@ -4,7 +4,7 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 
-@ConfigGroup("example")
+@ConfigGroup("livefriendlocations")
 public interface LiveFriendLocationsPluginConfiguration extends Config
 {
 	@ConfigItem(
@@ -14,7 +14,7 @@ public interface LiveFriendLocationsPluginConfiguration extends Config
 	)
 	default String getEndpoint()
 	{
-		return "base url for api here";
+		return "go to this plugins GitHub to setup your API";
 	}
 
 	@ConfigItem(
