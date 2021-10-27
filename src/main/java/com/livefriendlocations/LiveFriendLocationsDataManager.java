@@ -8,7 +8,7 @@ import com.google.gson.JsonSyntaxException;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -19,7 +19,7 @@ import okhttp3.Response;
 
 import javax.inject.Inject;
 
-@Log
+@Slf4j
 public class LiveFriendLocationsDataManager {
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
@@ -62,7 +62,7 @@ public class LiveFriendLocationsDataManager {
                 @Override
                 public void onFailure(Call call, IOException e)
                 {
-                    log.warning("Error sending shooting star data");
+                    log.error("Error sending shooting star data");
                     plugin.setPostError(true);
                 }
 
@@ -81,20 +81,21 @@ public class LiveFriendLocationsDataManager {
                         catch (IOException | JsonSyntaxException e)
                         {
                             plugin.setGetError(true);
-                            log.warning(e.getMessage());
+                            log.error(e.getMessage());
                         }
                     }
                     else
                     {
-                        log.warning("Post request unsuccessful");
+                        log.error("Post request unsuccessful");
                         plugin.setPostError(true);
                     }
+                    response.close();
                 }
             });
         }
         catch (IllegalArgumentException e)
         {
-            log.warning("Bad URL given: " + e.getLocalizedMessage());
+            log.error("Bad URL given: " + e.getLocalizedMessage());
             plugin.setPostError(true);
         }
     }
@@ -112,7 +113,7 @@ public class LiveFriendLocationsDataManager {
                 @Override
                 public void onFailure(Call call, IOException e)
                 {
-                    log.warning("Error retrieving location data");
+                    log.error("Error retrieving location data");
                     plugin.setGetError(true);
                 }
 
@@ -132,20 +133,21 @@ public class LiveFriendLocationsDataManager {
                         catch (IOException | JsonSyntaxException e)
                         {
                             plugin.setGetError(true);
-                            log.warning(e.getMessage());
+                            log.error(e.getMessage());
                         }
                     }
                     else
                     {
-                        log.warning("Get request unsuccessful");
+                        log.error("Get request unsuccessful");
                         plugin.setGetError(true);
                     }
+                    response.close();
                 }
             });
         }
         catch (IllegalArgumentException e)
         {
-            log.warning("Bad URL given: " + e.getLocalizedMessage());
+            log.error("Bad URL given: " + e.getLocalizedMessage());
         }
     }
 }

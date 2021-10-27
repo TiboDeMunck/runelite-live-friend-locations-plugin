@@ -2,10 +2,11 @@ package com.livefriendlocations;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
-import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 import lombok.Getter;
 import lombok.Setter;
 
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -27,10 +28,9 @@ import java.util.regex.*;
 @PluginDescriptor(
 		name = "Live Friend Locations",
 		description = "Shows the locations of your friends who you share the API with.",
-		tags = {"location"},
-		enabledByDefault = false
+		tags = {"location"}
 )
-@Log
+@Slf4j
 public class LiveFriendLocationsPlugin extends Plugin
 {
 	private static final BufferedImage NORMAL_ICON;
