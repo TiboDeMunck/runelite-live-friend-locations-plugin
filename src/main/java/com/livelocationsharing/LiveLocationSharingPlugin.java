@@ -284,12 +284,19 @@ public class LiveLocationSharingPlugin extends Plugin
 
 	public boolean isClanMember(String name)
 	{
-		return (client.getClanChannel(ClanID.CLAN).findMember(name) != null);
+		if (client.getClanChannel(ClanID.CLAN) != null) {
+			return (client.getClanChannel(ClanID.CLAN).findMember(name) != null);
+		}
+		return false;
 	}
 
 	public boolean isGroupIronmanMember(String name)
 	{
-		return (client.getClanChannel(ClanID.GROUP_IRONMAN).findMember(name) != null);
+		if (client.getClanChannel(ClanID.GROUP_IRONMAN) != null)
+		{
+			return (client.getClanChannel(ClanID.GROUP_IRONMAN).findMember(name) != null);
+		}
+		return false;
 	}
 
 	/*public boolean isClanChatMember(String name)
