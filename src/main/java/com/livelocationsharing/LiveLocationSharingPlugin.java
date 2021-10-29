@@ -1,4 +1,4 @@
-package com.livefriendlocations;
+package com.livelocationsharing;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
@@ -28,12 +28,12 @@ import java.util.ArrayList;
 import java.util.regex.*;
 
 @PluginDescriptor(
-		name = "Live Friend Locations",
-		description = "Shows the locations of your friends who you share the API with.",
+		name = "Live Location Sharing",
+		description = "Share your location with other players.",
 		tags = {"location"}
 )
 @Slf4j
-public class LiveFriendLocationsPlugin extends Plugin
+public class LiveLocationSharingPlugin extends Plugin
 {
 	// Icons
 	private static final BufferedImage NORMAL_ICON;
@@ -46,37 +46,37 @@ public class LiveFriendLocationsPlugin extends Plugin
 	static
 	{
 		NORMAL_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveFriendLocationsPlugin.class, "/normal.png");
+		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/normal.png");
 		NORMAL_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
 	}
 	static
 	{
 		IM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveFriendLocationsPlugin.class, "/im.png");
+		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/im.png");
 		IM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
 	}
 	static
 	{
 		HCIM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveFriendLocationsPlugin.class, "/hcim.png");
+		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/hcim.png");
 		HCIM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
 	}
 	static
 	{
 		UIM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveFriendLocationsPlugin.class, "/uim.png");
+		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/uim.png");
 		UIM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
 	}
 	static
 	{
 		GIM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveFriendLocationsPlugin.class, "/gim.png");
+		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/gim.png");
 		GIM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
 	}
 	static
 	{
 		HCGIM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveFriendLocationsPlugin.class, "/hcgim.png");
+		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/hcgim.png");
 		HCGIM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
 	}
 
@@ -96,7 +96,7 @@ public class LiveFriendLocationsPlugin extends Plugin
 	// Variables
 	@Getter
 	@Setter
-	private ArrayList<LiveFriendLocationsData> PlayerData = new ArrayList<>();
+	private ArrayList<LiveLocationSharingData> PlayerData = new ArrayList<>();
 
 	@Getter
 	@Setter
@@ -123,15 +123,15 @@ public class LiveFriendLocationsPlugin extends Plugin
 	private WorldMapPointManager worldMapPointManager;
 
 	@Inject
-	private LiveFriendLocationsPluginConfiguration config;
+	private LiveLocationSharingPluginConfiguration config;
 
 	@Inject
-	private LiveFriendLocationsDataManager dataManager;
+	private LiveLocationSharingDataManager dataManager;
 
 	@Provides
-	LiveFriendLocationsPluginConfiguration provideConfig(ConfigManager configManager)
+	LiveLocationSharingPluginConfiguration provideConfig(ConfigManager configManager)
 	{
-		return configManager.getConfig(LiveFriendLocationsPluginConfiguration.class);
+		return configManager.getConfig(LiveLocationSharingPluginConfiguration.class);
 	}
 
 	// Delete on shutdown
@@ -155,7 +155,7 @@ public class LiveFriendLocationsPlugin extends Plugin
 				playerWorld = client.getWorld();
 				playerPos = client.getLocalPlayer().getWorldLocation();
 
-				LiveFriendLocationsData d = new LiveFriendLocationsData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType, playerWorld);
+				LiveLocationSharingData d = new LiveLocationSharingData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType, playerWorld);
 				dataManager.makePostRequest(d);
 				//log.info(String.format("x: %s, y: %s, plane: %s", playerPos.getX(), playerPos.getY(), playerPos.getPlane()));
 			}
@@ -168,12 +168,12 @@ public class LiveFriendLocationsPlugin extends Plugin
 	}
 
 	// Helper Functions - getters
-	public String getLiveFriendLocationsGetEndpoint()
+	public String getGetEndpoint()
 	{
 		return config.getEndpoint();
 	}
 
-	public String getLiveFriendLocationsPostEndpoint()
+	public String getPostEndpoint()
 	{
 		String url = config.getEndpoint();
 		if (url.substring(url.length() - 1).equals("/"))
@@ -193,7 +193,7 @@ public class LiveFriendLocationsPlugin extends Plugin
 	{
 		if (!PlayerData.isEmpty()) {
 			ArrayList<WorldMapPoint> l = new ArrayList<>();
-			for (LiveFriendLocationsData data: PlayerData) {
+			for (LiveLocationSharingData data: PlayerData) {
 				if (checkFilter(data))
 				{
 					final BufferedImage WAYPOINT_ICON = getIcon(data.getType());
@@ -241,7 +241,7 @@ public class LiveFriendLocationsPlugin extends Plugin
 	}
 
 	// helper functions - filters
-	public boolean checkFilter(LiveFriendLocationsData data)
+	public boolean checkFilter(LiveLocationSharingData data)
 	{
 		if (config.filterWorld() && playerWorld == data.getWorld())
 		{

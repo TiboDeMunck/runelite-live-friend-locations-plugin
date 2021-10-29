@@ -1,12 +1,12 @@
-package com.livefriendlocations;
+package com.livelocationsharing;
 
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
 
-@ConfigGroup("livefriendlocations")
-public interface LiveFriendLocationsPluginConfiguration extends Config
+@ConfigGroup("livelocationsharing")
+public interface LiveLocationSharingPluginConfiguration extends Config
 {
 	@ConfigSection(
 			name = "API Setup",
@@ -19,13 +19,13 @@ public interface LiveFriendLocationsPluginConfiguration extends Config
 			keyName = "BaseAPIUrl",
 			name = "API Base URL",
 			position = 1,
-			description = "Configures the address where you will receive data from and send data to.",
+			description = "Configures the address where you will receive data from and send data to. Checkout the GitHub for setup.",
 			secret = true,
 			section = APISettings
 	)
 	default String getEndpoint()
 	{
-		return "go to this plugins GitHub to setup your API";
+		return "";
 	}
 
 	@ConfigItem(
@@ -38,7 +38,7 @@ public interface LiveFriendLocationsPluginConfiguration extends Config
 	)
 	default String sharedKey()
 	{
-		return "shared key here";
+		return "";
 	}
 
 	@ConfigItem(
@@ -62,8 +62,7 @@ public interface LiveFriendLocationsPluginConfiguration extends Config
 			keyName = "filterEveryone",
 			name = "Show Everyone",
 			position = 101,
-			description = "Configures if you want to see everyone on the world map who has access to the API. " +
-					"Selecting this option will ignore all other filters except the world filter!",
+			description = "Configures if you want to see everyone on the world map who has access to the API.",
 			section = filterSettings
 	)
 	default boolean filterEveryone() {return true; }

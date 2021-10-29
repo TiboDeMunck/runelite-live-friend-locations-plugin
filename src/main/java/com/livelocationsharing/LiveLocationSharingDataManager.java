@@ -1,4 +1,4 @@
-package com.livefriendlocations;
+package com.livelocationsharing;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -20,7 +20,7 @@ import okhttp3.Response;
 import javax.inject.Inject;
 
 @Slf4j
-public class LiveFriendLocationsDataManager {
+public class LiveLocationSharingDataManager {
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     @Inject
@@ -30,16 +30,16 @@ public class LiveFriendLocationsDataManager {
     private Gson gson;
 
     @Inject
-    private LiveFriendLocationsPlugin plugin;
+    private LiveLocationSharingPlugin plugin;
 
-    private ArrayList<LiveFriendLocationsData> parseData(JsonArray j)
+    private ArrayList<LiveLocationSharingData> parseData(JsonArray j)
     {
-        ArrayList<LiveFriendLocationsData> l = new ArrayList<>();
+        ArrayList<LiveLocationSharingData> l = new ArrayList<>();
         for (JsonElement jsonElement : j)
         {
             JsonObject jObj = jsonElement.getAsJsonObject();
             if (!jObj.get("name").getAsString().equals(plugin.getPlayerName())) {
-                LiveFriendLocationsData d = new LiveFriendLocationsData(jObj.get("name").getAsString(), jObj.get("x").getAsInt(),
+                LiveLocationSharingData d = new LiveLocationSharingData(jObj.get("name").getAsString(), jObj.get("x").getAsInt(),
                         jObj.get("y").getAsInt(), jObj.get("plane").getAsInt(), jObj.get("type").getAsString(), jObj.get("world").getAsInt());
                 l.add(d);
             }
@@ -52,7 +52,7 @@ public class LiveFriendLocationsDataManager {
         try
         {
             Request r = new Request.Builder()
-                    .url(plugin.getLiveFriendLocationsPostEndpoint())
+                    .url(plugin.getPostEndpoint())
                     .addHeader("Authorization", plugin.getSharedKey())
                     .post(RequestBody.create(JSON, gson.toJson(temp)))
                     .build();
@@ -105,7 +105,7 @@ public class LiveFriendLocationsDataManager {
         try
         {
             Request r = new Request.Builder()
-                    .url(plugin.getLiveFriendLocationsGetEndpoint())
+                    .url(plugin.getGetEndpoint())
                     .addHeader("Authorization", plugin.getSharedKey())
                     .build();
             okHttpClient.newCall(r).enqueue(new Callback()

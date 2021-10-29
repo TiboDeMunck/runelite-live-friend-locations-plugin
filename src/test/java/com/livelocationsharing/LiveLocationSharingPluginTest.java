@@ -1,13 +1,13 @@
-package com.livefriendlocations;
+package com.livelocationsharing;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
 
-public class LiveFriendLocationsPluginTest
+public class LiveLocationSharingPluginTest
 {
 	public static void main(String[] args) throws Exception
 	{
-		ExternalPluginManager.loadBuiltin(LiveFriendLocationsPlugin.class);
+		ExternalPluginManager.loadBuiltin(LiveLocationSharingPlugin.class);
 		RuneLite.main(args);
 	}
 }
