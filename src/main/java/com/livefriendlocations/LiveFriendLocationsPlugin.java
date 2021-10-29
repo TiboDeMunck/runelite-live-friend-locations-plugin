@@ -2,7 +2,7 @@ package com.livefriendlocations;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
-import lombok.extern.slf4j.Slf4j;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,6 +21,8 @@ import net.runelite.client.ui.overlay.worldmap.WorldMapPoint;
 import net.runelite.client.ui.overlay.worldmap.WorldMapPointManager;
 import net.runelite.client.util.ImageUtil;
 
+import net.runelite.api.clan.ClanID;
+
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.regex.*;
@@ -33,6 +35,7 @@ import java.util.regex.*;
 @Slf4j
 public class LiveFriendLocationsPlugin extends Plugin
 {
+	// Icons
 	private static final BufferedImage NORMAL_ICON;
 	private static final BufferedImage IM_ICON;
 	private static final BufferedImage HCIM_ICON;
@@ -77,9 +80,23 @@ public class LiveFriendLocationsPlugin extends Plugin
 		HCGIM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
 	}
 
+	// 'Constants' (can change)
 	@Getter
 	@Setter
-	private ArrayList<LiveFriendLocationsData> GIMData = new ArrayList<>();
+	private String playerName;
+
+	@Getter
+	@Setter
+	private String playerType;
+
+	@Getter
+	@Setter
+	private int playerWorld;
+
+	// Variables
+	@Getter
+	@Setter
+	private ArrayList<LiveFriendLocationsData> PlayerData = new ArrayList<>();
 
 	@Getter
 	@Setter
@@ -89,6 +106,7 @@ public class LiveFriendLocationsPlugin extends Plugin
 	@Setter
 	private WorldPoint playerPos = new WorldPoint(0,0,0);
 
+	// Error variables
 	@Getter
 	@Setter
 	private boolean getError = false;
@@ -97,6 +115,7 @@ public class LiveFriendLocationsPlugin extends Plugin
 	@Setter
 	private boolean postError = false;
 
+	// Injects
 	@Inject
 	private Client client;
 
@@ -109,41 +128,34 @@ public class LiveFriendLocationsPlugin extends Plugin
 	@Inject
 	private LiveFriendLocationsDataManager dataManager;
 
-	@Getter
-	private String playerName;
-
-	@Getter
-	private String playerType;
-
 	@Provides
 	LiveFriendLocationsPluginConfiguration provideConfig(ConfigManager configManager)
 	{
 		return configManager.getConfig(LiveFriendLocationsPluginConfiguration.class);
 	}
 
-	/*@Override
-	protected void startUp()
-	{
-	}*/
-
+	// Delete on shutdown
 	@Override
 	protected void shutDown()
 	{
-		setGIMData(new ArrayList<>());
+		setPlayerData(new ArrayList<>());
 		setPlayerPos(new WorldPoint(0,0,0));
 
 		removeWaypoints();
 	}
 
+	// Subscribes
 	@Subscribe
 	public void onGameTick(GameTick tick) {
 		if (isValidURL(config.getEndpoint()))
 		{
 			if (config.sendLocation()) {
-				playerPos = client.getLocalPlayer().getWorldLocation();
-				playerType = client.getAccountType().name();
 				playerName = client.getLocalPlayer().getName();
-				LiveFriendLocationsData d = new LiveFriendLocationsData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType);
+				playerType = client.getAccountType().name();
+				playerWorld = client.getWorld();
+				playerPos = client.getLocalPlayer().getWorldLocation();
+
+				LiveFriendLocationsData d = new LiveFriendLocationsData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType, playerWorld);
 				dataManager.makePostRequest(d);
 				//log.info(String.format("x: %s, y: %s, plane: %s", playerPos.getX(), playerPos.getY(), playerPos.getPlane()));
 			}
@@ -155,6 +167,7 @@ public class LiveFriendLocationsPlugin extends Plugin
 		}
 	}
 
+	// Helper Functions - getters
 	public String getLiveFriendLocationsGetEndpoint()
 	{
 		return config.getEndpoint();
@@ -175,21 +188,25 @@ public class LiveFriendLocationsPlugin extends Plugin
 		return config.sharedKey();
 	}
 
+	// helper functions - waypoints
 	private void setWaypoints()
 	{
-		if (!GIMData.isEmpty()) {
+		if (!PlayerData.isEmpty()) {
 			ArrayList<WorldMapPoint> l = new ArrayList<>();
-			for (LiveFriendLocationsData data: GIMData) {
-				final BufferedImage WAYPOINT_ICON = getIcon(data.getType());
-				WorldMapPoint waypoint = new WorldMapPoint(data.getWaypoint(), WAYPOINT_ICON);
-				waypoint.setName(data.getName());
-				waypoint.setJumpOnClick(true);
-				waypoint.setSnapToEdge(true);
-				l.add(waypoint);
+			for (LiveFriendLocationsData data: PlayerData) {
+				if (checkFilter(data))
+				{
+					final BufferedImage WAYPOINT_ICON = getIcon(data.getType());
+					WorldMapPoint waypoint = new WorldMapPoint(data.getWaypoint(), WAYPOINT_ICON);
+					waypoint.setName(data.getName());
+					waypoint.setJumpOnClick(true);
+					waypoint.setSnapToEdge(true);
+					l.add(waypoint);
 
-				worldMapPointManager.add(waypoint);
+					worldMapPointManager.add(waypoint);
+					setWaypointData(l);
+				}
 			}
-			setWaypointData(l);
 		}
 	}
 
@@ -223,11 +240,74 @@ public class LiveFriendLocationsPlugin extends Plugin
 		}
 	}
 
+	// helper functions - filters
+	public boolean checkFilter(LiveFriendLocationsData data)
+	{
+		if (config.filterWorld() && playerWorld == data.getWorld())
+		{
+			return checkFilterHelper(data.getName());
+		}
+		else if (config.filterWorld())
+		{
+			return false;
+		}
+		else
+		{
+			return checkFilterHelper(data.getName());
+		}
+	}
+
+	public boolean checkFilterHelper(String name)
+	{
+		if (config.filterEveryone())
+		{
+			return true;
+		}
+		else
+		{
+			if (config.filterFriends() && isFriend(name))
+			{
+				return true;
+			}
+			if (config.filterClan() && isClanMember(name))
+			{
+				return true;
+			}
+			return config.filterGroupIronman() && isGroupIronmanMember(name);
+		}
+	}
+
+	public boolean isFriend(String name)
+	{
+		return client.isFriended(name, true);
+	}
+
+	public boolean isClanMember(String name)
+	{
+		return (client.getClanChannel(ClanID.CLAN).findMember(name) != null);
+	}
+
+	public boolean isGroupIronmanMember(String name)
+	{
+		return (client.getClanChannel(ClanID.GROUP_IRONMAN).findMember(name) != null);
+	}
+
+	/*public boolean isClanChatMember(String name)
+	{
+
+	}*/
+
+	public boolean sameWorld(int world)
+	{
+		return (getPlayerWorld() == world);
+	}
+
+	// helper functions - validators
 	public boolean isValidURL(String url)
 	{
 		String regex = "((http|https)://)(www.)?"
 				+ "[a-zA-Z0-9@:%._\\-\\+~#?&//=]"
-				+ "{2,256}\\.[a-z]"
+				+ "{2,256}(\\.|\\:)[a-z0-9]"
 				+ "{2,6}\\b([-a-zA-Z0-9@:%"
 				+ "._\\+~#?&//=]*)";
 

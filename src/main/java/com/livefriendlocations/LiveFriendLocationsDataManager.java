@@ -40,7 +40,7 @@ public class LiveFriendLocationsDataManager {
             JsonObject jObj = jsonElement.getAsJsonObject();
             if (!jObj.get("name").getAsString().equals(plugin.getPlayerName())) {
                 LiveFriendLocationsData d = new LiveFriendLocationsData(jObj.get("name").getAsString(), jObj.get("x").getAsInt(),
-                        jObj.get("y").getAsInt(), jObj.get("plane").getAsInt(), jObj.get("type").getAsString());
+                        jObj.get("y").getAsInt(), jObj.get("plane").getAsInt(), jObj.get("type").getAsString(), jObj.get("world").getAsInt());
                 l.add(d);
             }
         }
@@ -62,7 +62,7 @@ public class LiveFriendLocationsDataManager {
                 @Override
                 public void onFailure(Call call, IOException e)
                 {
-                    log.error("Error sending shooting star data");
+                    log.error("Error sending player data");
                     plugin.setPostError(true);
                 }
 
@@ -73,7 +73,7 @@ public class LiveFriendLocationsDataManager {
                     {
                         try {
                             JsonArray j = new Gson().fromJson(response.body().string(), JsonArray.class);
-                            plugin.setGIMData(parseData(j));
+                            plugin.setPlayerData(parseData(j));
                             log.info(j.toString());
                             plugin.setPostError(false);
                             response.close();
@@ -125,7 +125,7 @@ public class LiveFriendLocationsDataManager {
                         try
                         {
                             JsonArray j = new Gson().fromJson(response.body().string(), JsonArray.class);
-                            plugin.setGIMData(parseData(j));
+                            plugin.setPlayerData(parseData(j));
                             log.info(j.toString());
                             plugin.setGetError(false);
                             //plugin.updatePanelList();

@@ -15,9 +15,13 @@ public class LiveFriendLocationsData {
     @Getter
     private final WorldPoint waypoint;
 
-    public LiveFriendLocationsData(String name, int x, int y, int plane, String type) {
+    @Getter
+    private final int world;
+
+    public LiveFriendLocationsData(String name, int x, int y, int plane, String type, int world) {
         this.name = name;
         this.waypoint = new WorldPoint(x, y, plane);
         this.type = type;
+        this.world = world;
     }
 }
