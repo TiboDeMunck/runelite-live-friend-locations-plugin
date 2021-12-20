@@ -7,16 +7,19 @@ import lombok.Getter;
 import lombok.Setter;
 
 import lombok.extern.slf4j.Slf4j;
+
 import net.runelite.api.Client;
+import net.runelite.api.Varbits;
+import net.runelite.api.WorldType;
+import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.GameTick;
+
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
-import net.runelite.api.events.GameTick;
-
-import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.ui.overlay.worldmap.WorldMapPoint;
 import net.runelite.client.ui.overlay.worldmap.WorldMapPointManager;
 import net.runelite.client.util.ImageUtil;
@@ -149,7 +152,7 @@ public class LiveLocationSharingPlugin extends Plugin
 	public void onGameTick(GameTick tick) {
 		if (isValidURL(config.getEndpoint()))
 		{
-			if (config.sendLocation()) {
+			if (config.sendLocation() && wildernessChecker() && pvpWorldChecker()) {
 				playerName = client.getLocalPlayer().getName();
 				playerType = client.getAccountType().name();
 				playerWorld = client.getWorld();
@@ -297,6 +300,24 @@ public class LiveLocationSharingPlugin extends Plugin
 			return (client.getClanChannel(ClanID.GROUP_IRONMAN).findMember(name) != null);
 		}
 		return false;
+	}
+
+	public boolean wildernessChecker()
+	{
+		if (config.filterWilderness())
+		{
+			return true;
+		}
+		else return client.getVar(Varbits.IN_WILDERNESS) == 0;
+	}
+
+	public boolean pvpWorldChecker()
+	{
+		if (config.filterPvpWorld())
+		{
+			return true;
+		}
+		else return !WorldType.isPvpWorld(client.getWorldType());
 	}
 
 	/*public boolean isClanChatMember(String name)

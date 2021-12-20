@@ -41,65 +41,91 @@ public interface LiveLocationSharingPluginConfiguration extends Config
 		return "";
 	}
 
-	@ConfigItem(
-			keyName = "sendLocation",
-			name = "Send your location",
-			position = 3,
-			description = "Configures if you want to send your location.",
-			section = APISettings
-	)
-	default boolean sendLocation() {return true; }
-
 	@ConfigSection(
-			name = "Filters",
-			description = "Filter who you see on the world map.",
+			name = "Filter your location",
+			description = "Filter when you share your location.",
 			position = 100,
 			closedByDefault = true
 	)
-	String filterSettings = "filterSettings";
+	String postLocationSettings = "postLocationSettings";
+
+	@ConfigItem(
+			keyName = "sendLocation",
+			name = "Send your location",
+			position = 101,
+			description = "Configures if you want to send your location.",
+			section = postLocationSettings
+	)
+	default boolean sendLocation() {return true; }
+
+	@ConfigItem(
+			keyName = "filterWilderness",
+			name = "Send wilderness location",
+			position = 102,
+			description = "Configures if you want send your location when you are in the Wilderness.",
+			section = postLocationSettings
+	)
+	default boolean filterWilderness() {return true; }
+
+	@ConfigItem(
+			keyName = "filterPvpWorld",
+			name = "Send PVP world location",
+			position = 103,
+			description = "Configures if you want send your location when you are in a PVP world.",
+			section = postLocationSettings
+	)
+	default boolean filterPvpWorld() {return true; }
+
+	@ConfigSection(
+			name = "Filter incoming locations",
+			description = "Filter who you see on the world map.",
+			position = 200,
+			closedByDefault = true
+	)
+	String getLocationSettings = "getLocationSettings";
 
 	@ConfigItem(
 			keyName = "filterEveryone",
 			name = "Show Everyone",
-			position = 101,
+			position = 201,
 			description = "Configures if you want to see everyone on the world map who has access to the API.",
-			section = filterSettings
+			section = getLocationSettings
 	)
 	default boolean filterEveryone() {return true; }
 
 	@ConfigItem(
 			keyName = "filterFriends",
 			name = "Show Friends",
-			position = 102,
+			position = 202,
 			description = "Configures if you want to see your friends on the world map.",
-			section = filterSettings
+			section = getLocationSettings
 	)
 	default boolean filterFriends() {return false; }
 
 	@ConfigItem(
 			keyName = "filterClan",
 			name = "Show Clan Members",
-			position = 103,
+			position = 203,
 			description = "Configures if you want to see your fellow clan members on the world map.",
-			section = filterSettings
+			section = getLocationSettings
 	)
 	default boolean filterClan() {return false; }
 
 	@ConfigItem(
 			keyName = "filterGroupIronman",
 			name = "Show Group Ironman",
-			position = 104,
+			position = 204,
 			description = "Configures if you want to see your fellow group ironman on the world map.",
-			section = filterSettings
+			section = getLocationSettings
 	)
 	default boolean filterGroupIronman() {return false; }
 
 	@ConfigItem(
 			keyName = "filterWorld",
 			name = "Only show same world",
-			position = 105,
+			position = 205,
 			description = "Configures if you only want to see players in the same world as you.",
-			section = filterSettings
+			section = getLocationSettings
 	)
 	default boolean filterWorld() {return false; }
 }
