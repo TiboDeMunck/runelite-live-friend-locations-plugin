@@ -24,7 +24,7 @@ import net.runelite.client.ui.overlay.worldmap.WorldMapPoint;
 import net.runelite.client.ui.overlay.worldmap.WorldMapPointManager;
 import net.runelite.client.util.ImageUtil;
 
-import net.runelite.api.clan.ClanID;
+import net.runelite.api.clan.*;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -38,50 +38,18 @@ import java.util.regex.*;
 @Slf4j
 public class LiveLocationSharingPlugin extends Plugin
 {
-	// Icons
-	private static final BufferedImage NORMAL_ICON;
-	private static final BufferedImage IM_ICON;
-	private static final BufferedImage HCIM_ICON;
-	private static final BufferedImage UIM_ICON;
-	private static final BufferedImage GIM_ICON;
-	private static final BufferedImage HCGIM_ICON;
+	// Injects
+	@Inject
+	private Client client;
 
-	static
-	{
-		NORMAL_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/normal.png");
-		NORMAL_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
-	}
-	static
-	{
-		IM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/im.png");
-		IM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
-	}
-	static
-	{
-		HCIM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/hcim.png");
-		HCIM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
-	}
-	static
-	{
-		UIM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/uim.png");
-		UIM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
-	}
-	static
-	{
-		GIM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/gim.png");
-		GIM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
-	}
-	static
-	{
-		HCGIM_ICON = new BufferedImage(37, 37, BufferedImage.TYPE_INT_ARGB);
-		final BufferedImage waypointIcon = ImageUtil.loadImageResource(LiveLocationSharingPlugin.class, "/hcgim.png");
-		HCGIM_ICON.getGraphics().drawImage(waypointIcon, 0, 0, null);
-	}
+	@Inject
+	private WorldMapPointManager worldMapPointManager;
+
+	@Inject
+	private LiveLocationSharingPluginConfiguration config;
+
+	@Inject
+	private LiveLocationSharingDataManager dataManager;
 
 	// 'Constants' (can change)
 	@Getter
@@ -117,19 +85,6 @@ public class LiveLocationSharingPlugin extends Plugin
 	@Getter
 	@Setter
 	private boolean postError = false;
-
-	// Injects
-	@Inject
-	private Client client;
-
-	@Inject
-	private WorldMapPointManager worldMapPointManager;
-
-	@Inject
-	private LiveLocationSharingPluginConfiguration config;
-
-	@Inject
-	private LiveLocationSharingDataManager dataManager;
 
 	@Provides
 	LiveLocationSharingPluginConfiguration provideConfig(ConfigManager configManager)
@@ -199,7 +154,7 @@ public class LiveLocationSharingPlugin extends Plugin
 			for (LiveLocationSharingData data: PlayerData) {
 				if (checkFilter(data))
 				{
-					final BufferedImage WAYPOINT_ICON = getIcon(data.getType());
+					final BufferedImage WAYPOINT_ICON = getIcon(data.getType(), data.getName());
 					WorldMapPoint waypoint = new WorldMapPoint(data.getWaypoint(), WAYPOINT_ICON);
 					waypoint.setName(data.getName());
 					waypoint.setJumpOnClick(true);
@@ -223,23 +178,26 @@ public class LiveLocationSharingPlugin extends Plugin
 		}
 	}
 
-	private BufferedImage getIcon(String type)
+	private BufferedImage getIcon(String type, String name)
 	{
-		switch (type) {
-			case "NORMAL":
-				return NORMAL_ICON;
-			case "IRONMAN":
-				return IM_ICON;
-			case "HARDCORE_IRONMAN":
-				return HCIM_ICON;
-			case "ULTIMATE_IRONMAN":
-				return UIM_ICON;
-			case "GROUP_IRONMAN":
-				return GIM_ICON;
-			case "HARDCORE_GROUP_IRONMAN":
-				return HCGIM_ICON;
-			default:
-				return NORMAL_ICON;
+		if (config.displayClanRank())
+		{
+			ClanSettings clanSettings = client.getClanSettings();
+			if (clanSettings == null) {
+				return LiveLocationSharingIcons.getAccountType(type);
+			}
+			ClanMember member = clanSettings.findMember(name);
+			if (member == null) {
+				return LiveLocationSharingIcons.getAccountType(type);
+			}
+
+			String title = clanSettings.titleForRank(member.getRank()).getName();
+
+			return LiveLocationSharingIcons.getClanRank(title);
+		}
+		else
+		{
+			return LiveLocationSharingIcons.getAccountType(type);
 		}
 	}
 

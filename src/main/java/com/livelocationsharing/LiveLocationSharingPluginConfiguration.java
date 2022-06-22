@@ -128,4 +128,21 @@ public interface LiveLocationSharingPluginConfiguration extends Config
 			section = getLocationSettings
 	)
 	default boolean filterWorld() {return false; }
+
+	@ConfigSection(
+			name = "Icon Display",
+			description = "World Map icon Display",
+			position = 300,
+			closedByDefault = true
+	)
+	String IconDisplay = "IconDisplay";
+
+	@ConfigItem(
+			keyName = "displayClanRank",
+			name = "Clan Rank Icon",
+			position = 301,
+			description = "Display whether you want to show the clan rank icon from people in your clan or not.",
+			section = IconDisplay
+	)
+	default boolean displayClanRank() {return false; }
 }
