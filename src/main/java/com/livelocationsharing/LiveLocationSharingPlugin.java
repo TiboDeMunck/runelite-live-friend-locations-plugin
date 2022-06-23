@@ -62,6 +62,10 @@ public class LiveLocationSharingPlugin extends Plugin
 
 	@Getter
 	@Setter
+	private String playerTitle;
+
+	@Getter
+	@Setter
 	private int playerWorld;
 
 	// Variables
@@ -110,10 +114,11 @@ public class LiveLocationSharingPlugin extends Plugin
 			if (config.sendLocation() && wildernessChecker() && pvpWorldChecker()) {
 				playerName = client.getLocalPlayer().getName();
 				playerType = client.getAccountType().name();
+				playerTitle = getTitle();
 				playerWorld = client.getWorld();
 				playerPos = client.getLocalPlayer().getWorldLocation();
 
-				LiveLocationSharingData d = new LiveLocationSharingData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType, playerWorld);
+				LiveLocationSharingData d = new LiveLocationSharingData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType, playerTitle, playerWorld);
 				dataManager.makePostRequest(d);
 				//log.info(String.format("x: %s, y: %s, plane: %s", playerPos.getX(), playerPos.getY(), playerPos.getPlane()));
 			}
@@ -154,7 +159,7 @@ public class LiveLocationSharingPlugin extends Plugin
 			for (LiveLocationSharingData data: PlayerData) {
 				if (checkFilter(data))
 				{
-					final BufferedImage WAYPOINT_ICON = getIcon(data.getType(), data.getName());
+					final BufferedImage WAYPOINT_ICON = getIcon(data.getType(), data.getName(), data.getTitle());
 					WorldMapPoint waypoint = new WorldMapPoint(data.getWaypoint(), WAYPOINT_ICON);
 					waypoint.setName(data.getName());
 					waypoint.setJumpOnClick(true);
@@ -178,22 +183,41 @@ public class LiveLocationSharingPlugin extends Plugin
 		}
 	}
 
-	private BufferedImage getIcon(String type, String name)
+	private String getTitle()
 	{
-		if (config.displayClanRank())
+		ClanSettings clanSettings = client.getClanSettings();
+		if (clanSettings == null) {
+			return "";
+		}
+		ClanMember member = clanSettings.findMember(playerName);
+		if (member == null) {
+			return "";
+		}
+
+		return clanSettings.titleForRank(member.getRank()).getName();
+	}
+
+	private BufferedImage getIcon(String type, String name, String title)
+	{
+		// Check for first toggle of clan title icons
+		if (config.displayClanTitle())
 		{
-			ClanSettings clanSettings = client.getClanSettings();
-			if (clanSettings == null) {
+			// Check for second toggle (only your clan title icons)
+			if (config.displayYourClanTitle())
+			{
+				if (isClanMember(name))
+				{
+					return LiveLocationSharingIcons.getClanRank(title);
+				}
 				return LiveLocationSharingIcons.getAccountType(type);
 			}
-			ClanMember member = clanSettings.findMember(name);
-			if (member == null) {
-				return LiveLocationSharingIcons.getAccountType(type);
+			else
+			{
+				if (title.equals("")) {
+					return LiveLocationSharingIcons.getAccountType(type);
+				}
+				return LiveLocationSharingIcons.getClanRank(title);
 			}
-
-			String title = clanSettings.titleForRank(member.getRank()).getName();
-
-			return LiveLocationSharingIcons.getClanRank(title);
 		}
 		else
 		{

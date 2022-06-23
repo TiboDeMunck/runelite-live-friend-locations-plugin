@@ -40,7 +40,8 @@ public class LiveLocationSharingDataManager {
             JsonObject jObj = jsonElement.getAsJsonObject();
             if (!jObj.get("name").getAsString().equals(plugin.getPlayerName())) {
                 LiveLocationSharingData d = new LiveLocationSharingData(jObj.get("name").getAsString(), jObj.get("x").getAsInt(),
-                        jObj.get("y").getAsInt(), jObj.get("plane").getAsInt(), jObj.get("type").getAsString(), jObj.get("world").getAsInt());
+                        jObj.get("y").getAsInt(), jObj.get("plane").getAsInt(), jObj.get("type").getAsString(),
+                        jObj.get("title").getAsString(), jObj.get("world").getAsInt());
                 l.add(d);
             }
         }

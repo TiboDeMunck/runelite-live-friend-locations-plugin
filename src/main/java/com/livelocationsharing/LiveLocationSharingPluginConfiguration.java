@@ -138,11 +138,20 @@ public interface LiveLocationSharingPluginConfiguration extends Config
 	String IconDisplay = "IconDisplay";
 
 	@ConfigItem(
-			keyName = "displayClanRank",
-			name = "Clan Rank Icon",
+			keyName = "displayClanTitle",
+			name = "Clan Title Icons",
 			position = 301,
 			description = "Display whether you want to show the clan rank icon from people in your clan or not.",
 			section = IconDisplay
 	)
-	default boolean displayClanRank() {return false; }
+	default boolean displayClanTitle() {return false; }
+
+	@ConfigItem(
+			keyName = "displayYourClanTitle",
+			name = "Your Clan Title Icons",
+			position = 302,
+			description = "Toggle to display only clan title icons from your clan.",
+			section = IconDisplay
+	)
+	default boolean displayYourClanTitle() {return false; }
 }
