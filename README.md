@@ -7,4 +7,4 @@ This plugin shows other people on the world map, it uses an external API that sh
 To setup your own API: https://github.com/TiboDeMunck/runelite-live-friend-locations-api and follow setup instructions.
 
 ## !!!PLEASE UPDATE THE API!!!
-IF YOU DON'T <a src="https://github.com/TiboDeMunck/runelite-live-friend-locations-api#updating-fork">UPDATE THE API TO THE LATEST VERSION</a>, THE PLUGIN WILL STOP WORKING!
+IF YOU DON'T [UPDATE THE API TO THE LATEST VERSION](https://github.com/TiboDeMunck/runelite-live-friend-locations-api#updating-fork), THE PLUGIN WILL STOP WORKING!
