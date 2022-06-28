@@ -148,7 +148,7 @@ public interface LiveLocationSharingPluginConfiguration extends Config
 
 	@ConfigItem(
 			keyName = "displayYourClanTitle",
-			name = "Your Clan Title Icons",
+			name = "Filter On Your Clan",
 			position = 302,
 			description = "Toggle to display only clan title icons from your clan.",
 			section = IconDisplay
