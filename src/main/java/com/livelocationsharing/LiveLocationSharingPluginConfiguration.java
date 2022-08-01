@@ -4,6 +4,7 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.Range;
 
 @ConfigGroup("livelocationsharing")
 public interface LiveLocationSharingPluginConfiguration extends Config
@@ -137,10 +138,23 @@ public interface LiveLocationSharingPluginConfiguration extends Config
 	)
 	String IconDisplay = "IconDisplay";
 
+	@Range(
+			min = 13,
+			max = 130
+	)
+	@ConfigItem(
+			keyName = "iconScale",
+			name = "Scale Icon on Map",
+			position = 301,
+			description = "Decide the pixel width and height of the icons displayed on the world map.",
+			section = IconDisplay
+	)
+	default int iconScale() {return 32; }
+
 	@ConfigItem(
 			keyName = "displayClanTitle",
 			name = "Clan Title Icons",
-			position = 301,
+			position = 302,
 			description = "Display whether you want to show the clan rank icon from people in your clan or not.",
 			section = IconDisplay
 	)
@@ -149,7 +163,7 @@ public interface LiveLocationSharingPluginConfiguration extends Config
 	@ConfigItem(
 			keyName = "displayYourClanTitle",
 			name = "Filter On Your Clan",
-			position = 302,
+			position = 303,
 			description = "Toggle to display only clan title icons from your clan.",
 			section = IconDisplay
 	)

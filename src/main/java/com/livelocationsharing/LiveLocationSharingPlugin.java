@@ -43,6 +43,9 @@ public class LiveLocationSharingPlugin extends Plugin
 	private Client client;
 
 	@Inject
+	private ImageUtil imageUtil;
+
+	@Inject
 	private WorldMapPointManager worldMapPointManager;
 
 	@Inject
@@ -159,7 +162,7 @@ public class LiveLocationSharingPlugin extends Plugin
 			for (LiveLocationSharingData data: PlayerData) {
 				if (checkFilter(data))
 				{
-					final BufferedImage WAYPOINT_ICON = getIcon(data.getType(), data.getName(), data.getTitle());
+					final BufferedImage WAYPOINT_ICON = scaleIcon(getIcon(data.getType(), data.getName(), data.getTitle()));
 					WorldMapPoint waypoint = new WorldMapPoint(data.getWaypoint(), WAYPOINT_ICON);
 					waypoint.setName(data.getName());
 					waypoint.setJumpOnClick(true);
@@ -223,6 +226,12 @@ public class LiveLocationSharingPlugin extends Plugin
 		{
 			return LiveLocationSharingIcons.getAccountType(type);
 		}
+	}
+
+	private BufferedImage scaleIcon(BufferedImage waypoint)
+	{
+		BufferedImage test = imageUtil.resizeImage(waypoint, config.iconScale(), config.iconScale(), true);
+		return test;
 	}
 
 	// helper functions - filters
