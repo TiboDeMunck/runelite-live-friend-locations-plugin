@@ -434,7 +434,7 @@ public class LiveLocationSharingPlugin extends Plugin
 		{
 			return true;
 		}
-		else return client.getVar(Varbits.IN_WILDERNESS) == 0;
+		else return client.getVarbitValue(Varbits.IN_WILDERNESS) == 0;
 	}
 
 	public boolean pvpWorldChecker()
