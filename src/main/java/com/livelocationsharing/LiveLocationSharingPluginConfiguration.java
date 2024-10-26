@@ -130,6 +130,15 @@ public interface LiveLocationSharingPluginConfiguration extends Config
 	)
 	default boolean filterWorld() {return false; }
 
+	@ConfigItem(
+			keyName = "showOverworldLocation",
+			name = "Show players overworld location",
+			position = 206,
+			description = "Show location of the other players on the Gielinor Surface map when underground.",
+			section = getLocationSettings
+	)
+	default boolean showOverworldLocation() {return true; }
+
 	@ConfigSection(
 			name = "Icon Display",
 			description = "World Map icon Display",

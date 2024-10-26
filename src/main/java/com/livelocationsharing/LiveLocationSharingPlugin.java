@@ -1,19 +1,33 @@
 package com.livelocationsharing;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+
 import com.google.inject.Provides;
 import javax.inject.Inject;
 
 import lombok.Getter;
 import lombok.Setter;
-
 import lombok.extern.slf4j.Slf4j;
 
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.api.Varbits;
 import net.runelite.api.WorldType;
+
+import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 
+import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.worldmap.WorldMap;
+import net.runelite.api.worldmap.WorldMapData;
+
+import net.runelite.api.clan.*;
+
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 
@@ -22,13 +36,16 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import net.runelite.client.ui.overlay.worldmap.WorldMapPoint;
 import net.runelite.client.ui.overlay.worldmap.WorldMapPointManager;
+
 import net.runelite.client.util.ImageUtil;
 
-import net.runelite.api.clan.*;
-
 import java.awt.image.BufferedImage;
+import java.io.*;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.regex.*;
+
 
 @PluginDescriptor(
 		name = "Live Location Sharing",
@@ -43,6 +60,10 @@ public class LiveLocationSharingPlugin extends Plugin
 	private Client client;
 
 	@Inject
+	@Getter
+	private ClientThread clientThread;
+
+	@Inject
 	private ImageUtil imageUtil;
 
 	@Inject
@@ -53,6 +74,9 @@ public class LiveLocationSharingPlugin extends Plugin
 
 	@Inject
 	private LiveLocationSharingDataManager dataManager;
+
+	@Inject
+	private Gson gson;
 
 	// 'Constants' (can change)
 	@Getter
@@ -70,6 +94,13 @@ public class LiveLocationSharingPlugin extends Plugin
 	@Getter
 	@Setter
 	private int playerWorld;
+
+	@Getter
+	@Setter
+	private ArrayList<LiveLocationSharingWorldArea> areas;
+
+	@Getter
+	private WorldArea overworldArea = new WorldArea(1024, 2496, 2944, 1664, 0);
 
 	// Variables
 	@Getter
@@ -99,6 +130,11 @@ public class LiveLocationSharingPlugin extends Plugin
 		return configManager.getConfig(LiveLocationSharingPluginConfiguration.class);
 	}
 
+	@Override
+	protected void startUp() {
+		loadAreas();
+    }
+
 	// Delete on shutdown
 	@Override
 	protected void shutDown()
@@ -115,10 +151,9 @@ public class LiveLocationSharingPlugin extends Plugin
 		if (isValidURL(config.getEndpoint()))
 		{
 			if (config.sendLocation() && wildernessChecker() && pvpWorldChecker()) {
-				playerName = client.getLocalPlayer().getName();
-				playerType = client.getAccountType().name();
 				playerTitle = getTitle();
-				playerWorld = client.getWorld();
+
+				WorldPoint realPlayerPos = client.getLocalPlayer().getWorldLocation();
 				playerPos = client.getLocalPlayer().getWorldLocation();
 
 				LiveLocationSharingData d = new LiveLocationSharingData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType, playerTitle, playerWorld);
@@ -130,6 +165,24 @@ public class LiveLocationSharingPlugin extends Plugin
 			}
 			removeWaypoints();
 			setWaypoints();
+		}
+	}
+
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged event) {
+		if (event.getGameState() == GameState.LOGGED_IN) {
+			clientThread.invokeLater(() ->
+			{
+				playerName = client.getLocalPlayer().getName();
+				if (playerName == null)
+				{
+					return false;
+				}
+				playerType = getAccountType(client.getVarbitValue(Varbits.ACCOUNT_TYPE));
+				playerWorld = client.getWorld();
+
+				return true;
+			});
 		}
 	}
 
@@ -154,6 +207,24 @@ public class LiveLocationSharingPlugin extends Plugin
 		return config.sharedKey();
 	}
 
+	private String getAccountType(int varbitValue) {
+		switch (varbitValue) {
+			case 1:
+				return "IRONMAN";
+			case 2:
+				return "ULTIMATE_IRONMAN";
+			case 3:
+				return "HARDCORE_IRONMAN";
+			case 4:
+			case 6:
+				return "GROUP_IRONMAN";
+			case 5:
+				return "HARDCORE_GROUP_IRONMAN";
+			default:
+				return "NORMAL";
+		}
+	}
+
 	// helper functions - waypoints
 	private void setWaypoints()
 	{
@@ -167,8 +238,10 @@ public class LiveLocationSharingPlugin extends Plugin
 					waypoint.setName(data.getName());
 					waypoint.setJumpOnClick(true);
 					waypoint.setSnapToEdge(true);
-					l.add(waypoint);
 
+					compareWaypointCoordinates(waypoint);
+
+					l.add(waypoint);
 					worldMapPointManager.add(waypoint);
 					setWaypointData(l);
 				}
@@ -184,6 +257,68 @@ public class LiveLocationSharingPlugin extends Plugin
 			}
 			setWaypointData(new ArrayList<>());
 		}
+	}
+
+	private void compareWaypointCoordinates(WorldMapPoint waypoint)
+	{
+		// check if worldmap is currently open
+		Widget worldMapSearch = client.getWidget(ComponentID.WORLD_MAP_SEARCH);
+		if (worldMapSearch == null)
+		{
+			return;
+		}
+
+		WorldMap worldMap = client.getWorldMap();
+		if (worldMap == null)
+		{
+			return;
+		}
+		WorldMapData worldMapData = worldMap.getWorldMapData();
+
+		WorldPoint incomingWorldPoint = waypoint.getWorldPoint();
+		WorldPoint offsetWorldPoint = waypointCoordinateToMap(waypoint);
+
+
+		boolean sameMap = worldMapData.surfaceContainsPosition(offsetWorldPoint.getX(), offsetWorldPoint.getY());
+		if (sameMap) {
+			waypoint.setWorldPoint(offsetWorldPoint);
+		}
+
+		if (config.showOverworldLocation()) {
+			boolean differentWorldPoint = true;
+			while (differentWorldPoint && !sameMap && !overworldArea.contains(incomingWorldPoint)) {
+				waypointCoordinateToSurface(waypoint);
+				if (incomingWorldPoint == waypoint.getWorldPoint()) {
+					differentWorldPoint = false;
+				}
+				else {
+					incomingWorldPoint = waypoint.getWorldPoint();
+					sameMap = worldMapData.surfaceContainsPosition(incomingWorldPoint.getX(), incomingWorldPoint.getY());
+				}
+			}
+		}
+	}
+
+	private void waypointCoordinateToSurface(WorldMapPoint waypoint) {
+		WorldPoint initialWorldPoint = waypoint.getWorldPoint();
+		for (LiveLocationSharingWorldArea area : areas) {
+			if (area.getArea().contains(initialWorldPoint)) {
+				WorldPoint overworld = area.getOverworld().dy(3);
+				waypoint.setWorldPoint(overworld);
+				waypoint.setName(waypoint.getName() + " - " + area.getName());
+				return;
+			}
+		}
+	}
+
+	private WorldPoint waypointCoordinateToMap(WorldMapPoint waypoint) {
+		WorldPoint initialWorldPoint = waypoint.getWorldPoint();
+		for (LiveLocationSharingWorldArea area : areas) {
+			if (area.getArea().contains(initialWorldPoint)) {
+                return initialWorldPoint.dx(area.getTransposeX()).dy(area.getTransposeY());
+			}
+		}
+		return initialWorldPoint;
 	}
 
 	private String getTitle()
@@ -311,11 +446,6 @@ public class LiveLocationSharingPlugin extends Plugin
 		else return !WorldType.isPvpWorld(client.getWorldType());
 	}
 
-	/*public boolean isClanChatMember(String name)
-	{
-
-	}*/
-
 	public boolean sameWorld(int world)
 	{
 		return (getPlayerWorld() == world);
@@ -340,5 +470,15 @@ public class LiveLocationSharingPlugin extends Plugin
 
 		//log.info(url + " matches regex: " + String.valueOf(m.matches()));
 		return m.matches();
+	}
+
+	// helper function - Areas
+	private void loadAreas() {
+		String JSON_PATH = "/area/areas.json";
+
+		BufferedReader br = new BufferedReader(new InputStreamReader(
+                Objects.requireNonNull(this.getClass().getResourceAsStream(JSON_PATH))));
+		Type type = new TypeToken<ArrayList<LiveLocationSharingWorldArea>>(){}.getType();
+		areas = gson.fromJson(br, type);
 	}
 }

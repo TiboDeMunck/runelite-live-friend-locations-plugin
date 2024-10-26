@@ -75,7 +75,7 @@ public class LiveLocationSharingDataManager {
                         try {
                             JsonArray j = new Gson().fromJson(response.body().string(), JsonArray.class);
                             plugin.setPlayerData(parseData(j));
-                            log.info(j.toString());
+                            log.debug(j.toString());
                             plugin.setPostError(false);
                             response.close();
                         }
@@ -127,7 +127,7 @@ public class LiveLocationSharingDataManager {
                         {
                             JsonArray j = new Gson().fromJson(response.body().string(), JsonArray.class);
                             plugin.setPlayerData(parseData(j));
-                            log.info(j.toString());
+                            log.debug(j.toString());
                             plugin.setGetError(false);
                             //plugin.updatePanelList();
                         }
