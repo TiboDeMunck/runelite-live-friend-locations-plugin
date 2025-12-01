@@ -10,7 +10,7 @@ repositories {
 	mavenCentral()
 }
 
-def runeLiteVersion = '1.10.41.1'
+def runeLiteVersion = '1.12.6'
 
 dependencies {
 	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
@@ -24,7 +24,7 @@ dependencies {
 }
 
 group = 'com.livelocationsharing'
-version = '1.6'
+version = '1.7'
 sourceCompatibility = '1.8.29'
 
 tasks.withType(JavaCompile) {

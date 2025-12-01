@@ -10,10 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.Varbits;
-import net.runelite.api.WorldType;
+import net.runelite.api.*;
 
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
@@ -152,13 +149,21 @@ public class LiveLocationSharingPlugin extends Plugin
 		{
 			if (config.sendLocation() && wildernessChecker() && pvpWorldChecker()) {
 				playerTitle = getTitle();
+				playerPos = client.getLocalPlayer().getWorldLocation();
 
 				WorldPoint realPlayerPos = client.getLocalPlayer().getWorldLocation();
-				playerPos = client.getLocalPlayer().getWorldLocation();
+				WorldView wv = client.getLocalPlayer().getWorldView();
+				int worldViewId = wv.getId();
+				boolean isOnBoat = worldViewId != -1;
+				int plane = realPlayerPos.getPlane();
+				if(isOnBoat) {
+					WorldEntity we = client.getTopLevelWorldView().worldEntities().byIndex(worldViewId);
+					playerPos = WorldPoint.fromLocalInstance(client, we.getLocalLocation(), plane);
+					// log.info(String.format("x: %s, y: %s, plane: %s", mapPlayerPos.getX(), mapPlayerPos.getY(), plane));
+				}
 
 				LiveLocationSharingData d = new LiveLocationSharingData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType, playerTitle, playerWorld);
 				dataManager.makePostRequest(d);
-				//log.info(String.format("x: %s, y: %s, plane: %s", playerPos.getX(), playerPos.getY(), playerPos.getPlane()));
 			}
 			else {
 				dataManager.makeGetRequest();
