@@ -10,7 +10,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import net.runelite.api.*;
+import net.runelite.api.Client;
+import net.runelite.api.GameState;
+import net.runelite.api.Varbits;
+import net.runelite.api.WorldType;
+import net.runelite.api.WorldEntity;
+import net.runelite.api.WorldView;
 
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
