@@ -333,6 +333,9 @@ public class LiveLocationSharingPlugin extends Plugin
 
 	private String getTitle()
 	{
+		if (playerName == null) {
+			return "";
+		}
 		ClanSettings clanSettings = client.getClanSettings();
 		if (clanSettings == null) {
 			return "";
