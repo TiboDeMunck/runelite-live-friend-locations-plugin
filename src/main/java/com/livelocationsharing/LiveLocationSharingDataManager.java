@@ -63,7 +63,7 @@ public class LiveLocationSharingDataManager {
                 @Override
                 public void onFailure(Call call, IOException e)
                 {
-                    log.error("Error sending player data");
+                    log.error("Error sending player data", e);
                     plugin.setPostError(true);
                 }
 

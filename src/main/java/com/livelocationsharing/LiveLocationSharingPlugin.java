@@ -83,6 +83,10 @@ public class LiveLocationSharingPlugin extends Plugin
 	// 'Constants' (can change)
 	@Getter
 	@Setter
+	private boolean playerInitialized = false;
+
+	@Getter
+	@Setter
 	private String playerName;
 
 	@Getter
@@ -150,49 +154,69 @@ public class LiveLocationSharingPlugin extends Plugin
 	// Subscribes
 	@Subscribe
 	public void onGameTick(GameTick tick) {
-		if (isValidURL(config.getEndpoint()))
+		if (!isValidURL(config.getEndpoint()))
 		{
-			if (config.sendLocation() && wildernessChecker() && pvpWorldChecker()) {
-				playerTitle = getTitle();
-				playerPos = client.getLocalPlayer().getWorldLocation();
-
-				WorldPoint realPlayerPos = client.getLocalPlayer().getWorldLocation();
-				WorldView wv = client.getLocalPlayer().getWorldView();
-				int worldViewId = wv.getId();
-				boolean isOnBoat = worldViewId != -1;
-				int plane = realPlayerPos.getPlane();
-				if(isOnBoat) {
-					WorldEntity we = client.getTopLevelWorldView().worldEntities().byIndex(worldViewId);
-					playerPos = WorldPoint.fromLocalInstance(client, we.getLocalLocation(), plane);
-					// log.info(String.format("x: %s, y: %s, plane: %s", mapPlayerPos.getX(), mapPlayerPos.getY(), plane));
-				}
-
-				LiveLocationSharingData d = new LiveLocationSharingData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType, playerTitle, playerWorld);
-				dataManager.makePostRequest(d);
-			}
-			else {
-				dataManager.makeGetRequest();
-			}
-			removeWaypoints();
-			setWaypoints();
+			return;
 		}
+
+		// try to initialize the player until successful login
+		if (!playerInitialized) {
+			if (client.getGameState() != GameState.LOGGED_IN)
+			{
+				return;
+			}
+
+			playerName = client.getLocalPlayer().getName();
+			if (playerName == null)
+			{
+				return;
+			}
+
+			playerType = getAccountType(client.getVarbitValue(Varbits.ACCOUNT_TYPE));
+			playerWorld = client.getWorld();
+
+			// System.out.println("Player Initialized: " + playerName);
+			playerInitialized = true;
+		}
+
+		if (config.sendLocation() && wildernessChecker() && pvpWorldChecker()) {
+			playerTitle = getTitle();
+			playerPos = client.getLocalPlayer().getWorldLocation();
+
+			WorldPoint realPlayerPos = client.getLocalPlayer().getWorldLocation();
+			WorldView wv = client.getLocalPlayer().getWorldView();
+			int worldViewId = wv.getId();
+			int plane = realPlayerPos.getPlane();
+
+			boolean isInInstance = worldViewId != -1;
+			if(isInInstance) {
+				WorldView top = client.getTopLevelWorldView();
+				if (top != null && top.worldEntities() != null)
+				{
+					WorldEntity we = top.worldEntities().byIndex(worldViewId);
+
+					if (we != null && we.getLocalLocation() != null)
+					{
+						playerPos = WorldPoint.fromLocalInstance(client, we.getLocalLocation(), plane);
+					}
+				}
+				// log.info(String.format("x: %s, y: %s, plane: %s", mapPlayerPos.getX(), mapPlayerPos.getY(), plane));
+			}
+
+			LiveLocationSharingData d = new LiveLocationSharingData(playerName, playerPos.getX(), playerPos.getY(), playerPos.getPlane(), playerType, playerTitle, playerWorld);
+			dataManager.makePostRequest(d);
+		}
+		else {
+			dataManager.makeGetRequest();
+		}
+		removeWaypoints();
+		setWaypoints();
 	}
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged event) {
-		if (event.getGameState() == GameState.LOGGED_IN) {
-			clientThread.invokeLater(() ->
-			{
-				playerName = client.getLocalPlayer().getName();
-				if (playerName == null)
-				{
-					return false;
-				}
-				playerType = getAccountType(client.getVarbitValue(Varbits.ACCOUNT_TYPE));
-				playerWorld = client.getWorld();
-
-				return true;
-			});
+		if (event.getGameState() == GameState.LOGIN_SCREEN || event.getGameState() == GameState.HOPPING) {
+			playerInitialized = false;
 		}
 	}
 
